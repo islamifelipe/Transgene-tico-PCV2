@@ -613,8 +613,8 @@ int main(){
 	//Hospedeiro hospedeiro = initHospedeiro(&my_grafo);
 	//printEndossimbiontes(arvores);
 	//printEndossimbiontes(hospedeiro.caminhos);
-	// printEndossimbiontes(hospedeiro.cicloHamiltoniano);
-	transgenic(&my_grafo);
+	//printEndossimbiontes(hospedeiro.cicloHamiltoniano);
+	 transgenic(&my_grafo);
 
 	// Informacao ret = simplexrelaxado(&my_grafo);
 	// cout<<"Size = "<<ret.caminho.size()<<endl;
@@ -652,10 +652,10 @@ int main(){
 	// 	}
 	// 	cout<<endl;
 
-	// times(&tempsFinal1);   /* current time */ // clock final
-	// clock_t user_time = (tempsFinal1.tms_utime - tempsInit.tms_utime);
-	// float sec = (float) user_time / (float) sysconf(_SC_CLK_TCK);
-	// cout<<"Tempo total em segundos : "<<sec<<endl;
+	times(&tempsFinal1);   /* current time */ // clock final
+	clock_t user_time = (tempsFinal1.tms_utime - tempsInit.tms_utime);
+	float sec = (float) user_time / (float) sysconf(_SC_CLK_TCK);
+	cout<<"Tempo total em segundos : "<<sec<<endl;
 		
 	// constroiPlasmideosFromTree(&my_grafo,plasmideosSimples,resul.arvores);
 	// vector <Informacao> endossibiontes =  randomEndosibitontes(&my_grafo);

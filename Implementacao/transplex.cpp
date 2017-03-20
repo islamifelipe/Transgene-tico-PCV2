@@ -19,9 +19,10 @@ void init(Grafo *g){ // deve ser chamada apenas uma vez
 //NAO FUNCIONA AINDA
 Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
   GRBEnv env = GRBEnv();;
+
   //env.set("OutputFlag","0");
-  env.set(GRB_DoubleParam_IterationLimit,MAXITERACOES);
-  env.set(GRB_DoubleParam_Heuristics, 0); // 0% do tempo aplicado a heuristica do root
+  //env.set(GRB_DoubleParam_IterationLimit,MAXITERACOES);
+  //env.set(GRB_DoubleParam_Heuristics, 0); // 0% do tempo aplicado a heuristica do root
   //env.set(GRB_IntParam_NodeMethod, 0);
   env.set(GRB_IntParam_Method, 1); // primal
   env.set(GRB_IntParam_SiftMethod,1);
@@ -31,8 +32,8 @@ Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
   for (int i=0; i<g->getQuantArestas(); i++){ // se o grafo for direcionado, exitira uma aresta ij e outra ji
     int origem = g->getArestas(i)->getOrigem();
     int destino = g->getArestas(i)->getDestino();
-    x[origem][destino] = model.addVar(0.0, 1, 0.0, GRB_CONTINUOUS, "x"+std::to_string(origem)+std::to_string(destino)); // relaxacao linear
-    x[destino][origem] = model.addVar(0.0, 1, 0.0, GRB_CONTINUOUS, "x"+std::to_string(destino)+std::to_string(origem));
+    x[origem][destino] = model.addVar(0.0, 1, 0.0, GRB_BINARY, "x"+std::to_string(origem)+std::to_string(destino)); // relaxacao linear
+    x[destino][origem] = model.addVar(0.0, 1, 0.0, GRB_BINARY, "x"+std::to_string(destino)+std::to_string(origem));
   }///GRB_BINARY
   for (int i=1; i<g->getQuantVertices(); i++){
     u[i] = model.addVar(0.0, 10000000, 0.0, GRB_CONTINUOUS, "u"+std::to_string(i));
@@ -96,19 +97,30 @@ Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
       }
     }
     model.update();
-    for (int i=1; i<g->getQuantVertices(); i++){
-      u[i].set(GRB_DoubleAttr_PStart,0);
-    }
-    for (int i=0; i<cicloHamiltoniano.caminho.size(); i++){
-      int ori = cicloHamiltoniano.caminho[i]->getOrigem();
-      int dest = cicloHamiltoniano.caminho[i]->getDestino();
-      if (ori>dest){ // dest deve ser maior
-        dest = cicloHamiltoniano.caminho[i]->getOrigem();
-        ori = cicloHamiltoniano.caminho[i]->getDestino();
-      }
-      x[ori][dest].set(GRB_DoubleAttr_PStart,1);
-      u[dest].set(GRB_DoubleAttr_PStart,1);
-    }
+    // for (int ii=0; ii<constrCont; ii++){
+    //   GRBConstr cons= model.getConstrByName(std::to_string(ii));
+    //   cons.set(GRB_DoubleAttr_DStart,1);
+
+    // }
+    // for (int i=0; i<g->getQuantArestas(); i++){
+    //      int origem = g->getArestas(i)->getOrigem();
+    //     int destino = g->getArestas(i)->getDestino();
+    //     x[origem][destino].set(GRB_DoubleAttr_Start,0);
+    //     x[destino][origem].set(GRB_DoubleAttr_Start,0);
+    // }
+    // for (int i=1; i<g->getQuantVertices(); i++){
+    //   u[i].set(GRB_DoubleAttr_Start,0);
+    // }
+    // for (int i=0; i<cicloHamiltoniano.caminho.size(); i++){
+    //   int ori = cicloHamiltoniano.caminho[i]->getOrigem();
+    //   int dest = cicloHamiltoniano.caminho[i]->getDestino();
+    //   if (ori>dest){ // dest deve ser maior
+    //     dest = cicloHamiltoniano.caminho[i]->getOrigem();
+    //     ori = cicloHamiltoniano.caminho[i]->getDestino();
+    //   }
+    //   x[ori][dest].set(GRB_DoubleAttr_Start,1);
+    //   u[dest].set(GRB_DoubleAttr_Start,1);
+    // }
 
   model.optimize();
   int optimstatus = model.get(GRB_IntAttr_Status);
