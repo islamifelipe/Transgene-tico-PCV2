@@ -16,26 +16,29 @@ void init(Grafo *g){ // deve ser chamada apenas uma vez
    	}
 }
 
-//NAO FUNCIONA AINDA
 Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
   GRBEnv env = GRBEnv();;
 
   //env.set("OutputFlag","0");
-  //env.set(GRB_DoubleParam_IterationLimit,MAXITERACOES);
-  //env.set(GRB_DoubleParam_Heuristics, 0); // 0% do tempo aplicado a heuristica do root
-  //env.set(GRB_IntParam_NodeMethod, 0);
-  env.set(GRB_IntParam_Method, 1); // primal
-  env.set(GRB_IntParam_SiftMethod,1);
+  env.set(GRB_DoubleParam_IterationLimit,MAXITERACOES-2000);
+  //env.set(GRB_DoubleParam_MIPGap,0.40);
+  env.set(GRB_DoubleParam_Heuristics, 0); // 0% do tempo aplicado a heuristica do root
+ // env.set(GRB_IntParam_NodeMethod, 1);
+  env.set(GRB_IntParam_Method, 0); 
+  env.set(GRB_IntParam_SiftMethod,0);
   GRBModel model = GRBModel(env);;
 
   //inicializa variaveis;
+  int *visitados = new int[g->getQuantVertices()];
   for (int i=0; i<g->getQuantArestas(); i++){ // se o grafo for direcionado, exitira uma aresta ij e outra ji
     int origem = g->getArestas(i)->getOrigem();
     int destino = g->getArestas(i)->getDestino();
-    x[origem][destino] = model.addVar(0.0, 1, 0.0, GRB_BINARY, "x"+std::to_string(origem)+std::to_string(destino)); // relaxacao linear
-    x[destino][origem] = model.addVar(0.0, 1, 0.0, GRB_BINARY, "x"+std::to_string(destino)+std::to_string(origem));
+    x[origem][destino] = model.addVar(0.0, 1, 0.0, GRB_CONTINUOUS, "x"+std::to_string(origem)+std::to_string(destino)); // relaxacao linear
+    x[destino][origem] = model.addVar(0.0, 1, 0.0, GRB_CONTINUOUS, "x"+std::to_string(destino)+std::to_string(origem));
   }///GRB_BINARY
+  visitados[0] = -1;
   for (int i=1; i<g->getQuantVertices(); i++){
+    visitados[i] = -1;
     u[i] = model.addVar(0.0, 10000000, 0.0, GRB_CONTINUOUS, "u"+std::to_string(i));
   }
 
@@ -97,30 +100,60 @@ Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
       }
     }
     model.update();
-    // for (int ii=0; ii<constrCont; ii++){
-    //   GRBConstr cons= model.getConstrByName(std::to_string(ii));
-    //   cons.set(GRB_DoubleAttr_DStart,1);
+    for (int ii=0; ii<constrCont; ii++){
+      GRBConstr cons= model.getConstrByName(std::to_string(ii));
+      cons.set(GRB_DoubleAttr_DStart,0);
 
-    // }
-    // for (int i=0; i<g->getQuantArestas(); i++){
-    //      int origem = g->getArestas(i)->getOrigem();
-    //     int destino = g->getArestas(i)->getDestino();
-    //     x[origem][destino].set(GRB_DoubleAttr_Start,0);
-    //     x[destino][origem].set(GRB_DoubleAttr_Start,0);
-    // }
-    // for (int i=1; i<g->getQuantVertices(); i++){
-    //   u[i].set(GRB_DoubleAttr_Start,0);
-    // }
-    // for (int i=0; i<cicloHamiltoniano.caminho.size(); i++){
-    //   int ori = cicloHamiltoniano.caminho[i]->getOrigem();
-    //   int dest = cicloHamiltoniano.caminho[i]->getDestino();
-    //   if (ori>dest){ // dest deve ser maior
-    //     dest = cicloHamiltoniano.caminho[i]->getOrigem();
-    //     ori = cicloHamiltoniano.caminho[i]->getDestino();
-    //   }
-    //   x[ori][dest].set(GRB_DoubleAttr_Start,1);
-    //   u[dest].set(GRB_DoubleAttr_Start,1);
-    // }
+    }
+    for (int i=0; i<g->getQuantArestas(); i++){
+         int origem = g->getArestas(i)->getOrigem();
+        int destino = g->getArestas(i)->getDestino();
+        x[origem][destino].set(GRB_DoubleAttr_PStart,0);
+        x[destino][origem].set(GRB_DoubleAttr_PStart,0);
+    }
+    int inicioSegundoZero;
+
+    for (int i=0; i<cicloHamiltoniano.caminho.size(); i++){
+        if (cicloHamiltoniano.caminho[i]->getOrigem()==0 || cicloHamiltoniano.caminho[i]->getDestino()==0){
+          if (i+1 < cicloHamiltoniano.caminho.size()){
+            if (cicloHamiltoniano.caminho[i+1]->getOrigem()==0 || cicloHamiltoniano.caminho[i+1]->getDestino()==0){
+                inicioSegundoZero = i+1;
+                break;
+            } else {
+                inicioSegundoZero = i;
+                break;
+            }
+          }
+          //se nao, entao o i está no fim do vetor, logo o segundo zero está no inicio e portanto ja passamos por ele (o que é absurdo)
+        }
+    }
+    int contu = 0;
+    int ant = 0;
+    for (int i=inicioSegundoZero; i<cicloHamiltoniano.caminho.size(); i++){
+      if (cicloHamiltoniano.caminho[i]->getOrigem()!=0 && visitados[cicloHamiltoniano.caminho[i]->getOrigem()]==-1){
+        visitados[cicloHamiltoniano.caminho[i]->getOrigem()] = contu++;
+      }
+      if (cicloHamiltoniano.caminho[i]->getDestino()!=0 && visitados[cicloHamiltoniano.caminho[i]->getDestino()]==-1){
+        visitados[cicloHamiltoniano.caminho[i]->getDestino()] = contu++;
+      }
+      int prox = cicloHamiltoniano.caminho[i]->getDestino()!=ant?cicloHamiltoniano.caminho[i]->getDestino():cicloHamiltoniano.caminho[i]->getOrigem();
+      x[ant][prox].set(GRB_DoubleAttr_PStart,1);
+      ant = prox;
+    }
+
+    for (int i=0; i<inicioSegundoZero; i++){
+      if (cicloHamiltoniano.caminho[i]->getOrigem()!=0 && visitados[cicloHamiltoniano.caminho[i]->getOrigem()]==-1){
+        visitados[cicloHamiltoniano.caminho[i]->getOrigem()] = contu++;
+      }
+      if (cicloHamiltoniano.caminho[i]->getDestino()!=0 && visitados[cicloHamiltoniano.caminho[i]->getDestino()]==-1){
+        visitados[cicloHamiltoniano.caminho[i]->getDestino()] = contu++;
+      }
+      int prox = cicloHamiltoniano.caminho[i]->getDestino()!=ant?cicloHamiltoniano.caminho[i]->getDestino():cicloHamiltoniano.caminho[i]->getOrigem();
+      x[ant][prox].set(GRB_DoubleAttr_PStart,1);
+      ant = prox;
+    }
+
+    for (int i=1; i<cicloHamiltoniano.caminho.size(); i++) u[i].set(GRB_DoubleAttr_PStart,visitados[i]);
 
   model.optimize();
   int optimstatus = model.get(GRB_IntAttr_Status);
@@ -129,9 +162,9 @@ Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
   if (optimstatus != GRB_INFEASIBLE){
     for (int i=0; i<g->getQuantArestas(); i++){
       try{
-        if (x[g->getArestas(i)->getDestino()][g->getArestas(i)->getOrigem()].get(GRB_DoubleAttr_X)>=0.1 || x[g->getArestas(i)->getOrigem()][g->getArestas(i)->getDestino()].get(GRB_DoubleAttr_X)>=0.1){
-          cout<<"x"<<g->getArestas(i)->getOrigem()<<"_"<<g->getArestas(i)->getDestino()<<" = "<<x[g->getArestas(i)->getOrigem()][g->getArestas(i)->getDestino()].get(GRB_DoubleAttr_X)<<endl;
-         cout<<"x"<<g->getArestas(i)->getDestino()<<"_"<<g->getArestas(i)->getOrigem()<<" = "<<x[g->getArestas(i)->getDestino()][g->getArestas(i)->getOrigem()].get(GRB_DoubleAttr_X)<<endl;
+        if (x[g->getArestas(i)->getDestino()][g->getArestas(i)->getOrigem()].get(GRB_DoubleAttr_X)>0.0 || x[g->getArestas(i)->getOrigem()][g->getArestas(i)->getDestino()].get(GRB_DoubleAttr_X)>0.0){
+         //  cout<<"x"<<g->getArestas(i)->getOrigem()<<"_"<<g->getArestas(i)->getDestino()<<" = "<<x[g->getArestas(i)->getOrigem()][g->getArestas(i)->getDestino()].get(GRB_DoubleAttr_X)<<endl;
+         // cout<<"x"<<g->getArestas(i)->getDestino()<<"_"<<g->getArestas(i)->getOrigem()<<" = "<<x[g->getArestas(i)->getDestino()][g->getArestas(i)->getOrigem()].get(GRB_DoubleAttr_X)<<endl;
           
           ret.caminho.push_back(g->getArestas(i));
           ret.custo+=g->getArestas(i)->getPeso();
@@ -141,10 +174,28 @@ Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
       }
     }
   } 
-
-  return ret;
+  delete[] visitados;
+ return ret;
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //p = n-1
 /* Esta funcao executa um simplex relaxado (relaxacao linear) para o modelo do PCV de Miller,Tucker e Zemlin (1960) (apud Goldbarg e Luna, 2005)

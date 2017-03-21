@@ -13,7 +13,7 @@ typedef struct{
 typedef struct{
 	vector< Informacao > arvores;
 	vector< Informacao > caminhos;
-	vector< Informacao > cicloHamiltoniano;
+	//vector< Informacao > cicloHamiltoniano;
 	Informacao chaineSimplex;
 } Hospedeiro;
 
