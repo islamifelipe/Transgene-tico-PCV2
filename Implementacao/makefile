@@ -30,10 +30,10 @@ dijkstra.o : dijkstra.cpp dijkstra.h
 	g++ -g -c dijkstra.cpp -o dijkstra.o -O3 -w -Wall -mms-bitfields 
 
 main.o : main.cpp
-	g++ -g -c  main.cpp -o main.o
+	g++ -g -c  main.cpp -o main.o -O3 -w -Wall 
 
 transplex.o : transplex.cpp
-	g++ -g -c transplex.cpp -o transplex.o 
+	g++ -g -c transplex.cpp -o transplex.o -O3 -w -Wall 
 		
 transgenetico : main.o  Grafo.o Vertice.o Aresta.o Conjunto.o kruskal.o margeSort.o Heap.o  allmst.o dijkstra.o transplex.o
 	g++ -g  Aresta.o  Vertice.o Grafo.o Conjunto.o kruskal.o Heap.o margeSort.o allmst.o dijkstra.o main.o transplex.o -lm -o transgenetico -Llib/ -lgurobi_c++ -lgurobi65 -lm -O3 -w -Wall -mms-bitfields 

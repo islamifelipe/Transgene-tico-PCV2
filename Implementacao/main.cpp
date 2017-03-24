@@ -47,11 +47,12 @@ vetores transgenéticos
 	OK --> Seleciona uma arvore ou um caminho simples com probabilidade iguais, seleciona um alelo e monta um plasmideo de tamanho definido (O plasmideo deve ser um caminho)
 	OK --> seleciona um caminho hamiltoniano com pesos de probabilidade, seleciona um alelo e monta um plasmideo de tamanho definido
 	OK --> seleciona um alelo randômico do material genético do simplex, define randomicamente o tamanho do plasmideo. Gera o plasmideo com um busca em largura, sempre pegando as arestas de menor custo
-** Pasmideo recombinado (TODO):
-	--> Toma uma informacao do hospedeiro (solucao do PCV gerada aleatoriamente) e
-	 aplica como base inicial num simplex relaxado (quantidade de iteracoes limitada). 
-	 O resultado do simplex seria uma nova cadeia de DNA (inserina no hospedeiro) e que seria parcialmente usada pelo plasmideo.
 
+Os transpossons a seguir serao aplicados da seguinte forma:
+	caso um endossimbionte tenha resistido a dois ataques SEGUIDOS de plasmideos, entao sorteia-se um dos transpossns
+
+** Transposson:
+	OK --> Busca com 2-OPT (retorna o melhor vizinho). O ataque deste transposson consiste em verificar se o melhor vizinho é melhor que o endossimbionte atacado. Se sim, substitui. Se nao, deixa.
 ** TransPlex (Transposon que utiliza o simplex)
 	--> O transposson toma um endossimbionte, e aplica o simplex relaxado (binarios->continuos) e limitado (numero de iteracoes) sobre o mesmo, a fim de melhorá-lo
 	O intervalo do transposson é toda a cadeia do endossimbionte
@@ -64,18 +65,21 @@ int quantPlasFromPath; //  Quantidade de plasmideos simples formados por parte d
 int quantPlasFromCicle; //  Quantidade de plasmideos simples formados por parte da cadeia genética de ciclos hamiltonianos 
 int quantPlasFromCadeiaSimplex; // Quantidade de plasmideos simples formados por parte da cadeia genética oriunda do simplex
 int iteracoes; // quantidade de iteracoes do transgenético
-int quantDNAArvores = 10; // Quantidade de AGM armazenadas no hospedeiro
-int quantDNACaminhos = 290; // Quantidade de caminhos curtos simples armazenadas no hospedeiro
-int quantDNACiclo = 50; // Quantidade de ciclos hamiltonianos armazenadas no hospedeiro
+int quantDNAArvores = 5; // Quantidade de AGM armazenadas no hospedeiro
+int quantDNACaminhos = 295; // Quantidade de caminhos curtos simples armazenadas no hospedeiro
+int quantDNACiclo = 50; // Quantidade de ciclos hamiltonianos armazenadas no hospedeiro 
+int sizeTranspossonIntervalo = 50; //trans2opt = a busca na vizinhança deve ser feita entre os alelos init e end
+//sizeTranspossonIntervalo é o tamanho maximo do intervalo de busca do transposson. O trecho vai de (init, sizeTranspossonIntervalo), onde init é randômico
 int n;
 struct tms tempsInit, initArvores, tempsFinal1,tempsFinal2 ; // para medir o tempo
 
 /*Usada para preencher o a populacao inciial de 
 endossibiontes com solucoes puramente aleatorias
 Retorna n caminhos. Onde n é o numero de vertices do grafo;
-Cada caminho começa num vertice i */
-vector< Informacao > vizinhoMaisProximo(Grafo *g, int maximo){// O(n^3)
-	vector< Informacao > resul;
+Cada caminho começa num vertice i 
+O segundo item pair (int) é pra contar a quantidade de vezes que o endossimbionte foi atacado sem sucesso*/
+vector< pair <Informacao, int> > vizinhoMaisProximo(Grafo *g, int maximo){// O(n^3)
+	vector< pair <Informacao, int > > resul;
 	int visitado[g->getQuantVertices()];
 	int vez; // usado para o vertice da vez
 	int cont=0;
@@ -117,7 +121,7 @@ vector< Informacao > vizinhoMaisProximo(Grafo *g, int maximo){// O(n^3)
 			sol.caminho.push_back(a);
 			sol.custo +=a->getPeso();
 			if (resul.size()<maximo){
-				resul.push_back(sol);
+				resul.push_back(make_pair(sol,0));
 			} else break;
 		}
 
@@ -214,7 +218,7 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 			amostral.push_back(chaine.caminho[jj]->getDestino());
 		}
 		int origem = amostral[rand()%amostral.size()];
-		int max_size = 10; // comprimento maximo do plasmideo
+		int max_size = 6; // comprimento maximo do plasmideo
 		visitado[origem] = 1;
 		while (max_size>0){
 			float min = INT_MAX;
@@ -239,7 +243,9 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 				max_size = 0;
 			}
 		}
-		if (sol.size()>0) plasmideosSimples.push_back((Pasmideo){sol});
+		if (sol.size()>0) {
+			plasmideosSimples.push_back((Pasmideo){sol});
+		}
 	}
 
 }
@@ -294,6 +300,7 @@ void constroiPlasmideosFromTree(Grafo *g, vector <Pasmideo> &plasmideosSimples, 
 			//cout<<"aqui3"<<endl;
 		}
 		plasmideosSimples.push_back((Pasmideo){sol});
+		//cout<<"Size Arvore = "<<sol.size()<<endl;
 	}
 
 }
@@ -323,6 +330,7 @@ void constroiPlasmideosFromPath(vector <Pasmideo> &plasmideosSimples, vector< In
 			plasm.push_back(path.caminho[j]);
 		}
 		plasmideosSimples.push_back((Pasmideo){plasm}); 
+		//cout<<"Size coaminho = "<<plasm.size()<<endl;
 	}
 }
 
@@ -481,23 +489,111 @@ bool manipula(Grafo *g, Pasmideo plasm, Informacao cromossomo, Informacao &resul
 		} else  {/*cout<<"false6\n"*;*/return false;}
 	}
 }
-
-/*retorna um subconjunto de endossimbiontes (com iguais probabilidades)
-o "int" do "pair" é o id do cromossomo no vetor de endossimbiontes origial*/
-vector < pair<Informacao, int > > slecionaCromossomos(vector <Informacao> endossibiontes){
-	vector < pair<Informacao, int > > ret;
-	for (int i=0; i<endossibiontes.size(); i++){
-		int d = rand()%2;
-		if (d==1) ret.push_back(make_pair(endossibiontes[i], i));
+/*	transponsson retorna um melhoramento 2-opt para o endossimbionte
+	Caso nenhum vizinho 2-opt seja melhor que ele, o proprio endossimbionte da entrada é retornado
+	NOTE QUE O ATAQUE DO TRANSPOSSON ESTÁ IMPLÍCITO
+*/
+void trans2opt(Grafo *g, Informacao &re_endossibionte){
+	vector<int> representacao;
+	int initIntervalorTransposson = rand()%(re_endossibionte.caminho.size()-sizeTranspossonIntervalo+1); // 0 1 2 3 4 5 6 7 8 9 10 11 
+	// cout<<initIntervalorTransposson<<endl;
+	// cout<<sizeTranspossonIntervalo+initIntervalorTransposson<<endl;
+	//sizeTranspossonIntervalo = 50; // retirar;
+	
+	int init = re_endossibionte.caminho[0]->getOrigem();
+	if (init == re_endossibionte.caminho[1]->getOrigem() || init == re_endossibionte.caminho[1]->getDestino()){
+		init = re_endossibionte.caminho[0]->getDestino();
 	}
-	return ret;
-}
+	representacao.push_back(init);
+	int previuos =  init;
+	//cout<<init<<" ";
+	for (int i=0; i<re_endossibionte.caminho.size(); i++){ //O(n)
+		if (re_endossibionte.caminho[i]->getOrigem()!=previuos){
+				//cout<<re_endossibionte.caminho[i]->getOrigem()<<" ";
+			representacao.push_back(re_endossibionte.caminho[i]->getOrigem());
+			previuos = re_endossibionte.caminho[i]->getOrigem();
+		} else if (re_endossibionte.caminho[i]->getDestino()!=previuos){
+			//cout<<re_endossibionte.caminho[i]->getDestino()<<" ";
+			representacao.push_back(re_endossibionte.caminho[i]->getDestino());
+			previuos = re_endossibionte.caminho[i]->getDestino();
+		}
+	}
+	//cout<<endl;
+	float minCusto = re_endossibionte.custo;
+	bool melhoramento = true;
+	while (melhoramento == true){
+		melhoramento = false;
+		for (int i=initIntervalorTransposson+1; i<sizeTranspossonIntervalo+initIntervalorTransposson-2 && melhoramento==false; i++){ // intervalo na representacao (nao dos vertices) O(n^2)
+			for (int j=i+1; j<sizeTranspossonIntervalo+initIntervalorTransposson-1; j++){
+				if (j==i+1){
+					/* troca (i-1,i) por (i-1, j)  
+					 * troca (j,j+1) por (i, j+1) 
+					 * troca (i,j) por (j,i) */
+					 if ((g->isAdjacente(representacao[i-1],representacao[j])!=-1) && (g->isAdjacente(representacao[i],representacao[j+1])!=-1) && (g->isAdjacente(representacao[j],representacao[i])!=-1)){ // se as novas arestas existem
+						float novo = minCusto - g->getArestas(g->isAdjacente(representacao[i-1],representacao[i]))->getPeso() - g->getArestas(g->isAdjacente(representacao[j],representacao[j+1]))->getPeso() - g->getArestas(g->isAdjacente(representacao[i],representacao[j]))->getPeso();
+						float novoadd = novo + g->getArestas(g->isAdjacente(representacao[i-1],representacao[j]))->getPeso() + g->getArestas(g->isAdjacente(representacao[i],representacao[j+1]))->getPeso() +g->getArestas(g->isAdjacente(representacao[j],representacao[i]))->getPeso();
+						if (novoadd<minCusto){
+							minCusto = novoadd;
+							int aux = representacao[i];
+							representacao[i] = representacao[j];
+							representacao[j] = aux;
+							melhoramento = true;
+							cout<<"efeokfofk"<<endl;
+							break;
+						}
+					}
+				 }else{
+				 	/* troca (i-1,i) por (i-1, j) 
+					 * troca (i, i+1) por (j, i+1) 
+					 * troca (j-1,j) por (j-1, i) 
+					 * troca (j,j+1) por (i, j+1) 
+					 * portanto, as novas arestas devem existir
+					 */
+					if ((g->isAdjacente(representacao[i-1],representacao[j])!=-1) && (g->isAdjacente(representacao[j],representacao[i+1])!=-1) && (g->isAdjacente(representacao[j-1],representacao[i])!=-1) && (g->isAdjacente(representacao[i],representacao[j+1])!=-1)){ // se as novas arestas existem
+						float novo = minCusto - g->getArestas(g->isAdjacente(representacao[i-1],representacao[i]))->getPeso() - g->getArestas(g->isAdjacente(representacao[i],representacao[i+1]))->getPeso() - g->getArestas(g->isAdjacente(representacao[j-1],representacao[j]))->getPeso() - g->getArestas(g->isAdjacente(representacao[j],representacao[j+1]))->getPeso();
+						float novoadd = novo + g->getArestas(g->isAdjacente(representacao[i-1],representacao[j]))->getPeso() + g->getArestas(g->isAdjacente(representacao[j],representacao[i+1]))->getPeso() +g->getArestas(g->isAdjacente(representacao[j-1],representacao[i]))->getPeso()+g->getArestas(g->isAdjacente(representacao[i],representacao[j+1]))->getPeso();
+						if (novoadd<minCusto){
+							minCusto = novoadd;
+							int aux = representacao[i];
+							representacao[i] = representacao[j];
+							representacao[j] = aux;
+							melhoramento = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	int cont=0;
+	float custo = 0;
+	int i =0;
+	//cout<<representacao.size()<<endl;
+	for (; i< g->getQuantVertices(); i++){ //O(n)
+		re_endossibionte.caminho[cont++] = g->getArestas(g->isAdjacente(representacao[i], representacao[i+1]));
+		custo +=g->getArestas(g->isAdjacente(representacao[i], representacao[i+1]))->getPeso();
+		//cout<<representacao[i]<<", "<<representacao[i+1]<<endl;
+	}
+	re_endossibionte.custo = custo;
+	
 
-void printEndossimbiontes(vector <Informacao> endossibiontes){
+}
+// /*retorna um subconjunto de endossimbiontes (com iguais probabilidades)
+// o "int" do "pair" é o id do cromossomo no vetor de endossimbiontes origial*/
+// vector < pair<Informacao, int > > slecionaCromossomos(vector <Informacao> endossibiontes){
+// 	vector < pair<Informacao, int > > ret;
+// 	for (int i=0; i<endossibiontes.size(); i++){
+// 		int d = 1;//rand()%2;
+// 		if (d==1) ret.push_back(make_pair(endossibiontes[i], i));
+// 	}
+// 	return ret;
+// }
+
+void printEndossimbiontes(vector < pair <Informacao, int> > endossibiontes){
 	for (int i=0; i<endossibiontes.size(); i++){
-		cout<<"Endossibionte "<<i<<" (" << endossibiontes[i].custo <<") : ";
-		for (int j=0; j<endossibiontes[i].caminho.size(); j++){
-			cout<<"("<<endossibiontes[i].caminho[j]->getOrigem()<< ","<<endossibiontes[i].caminho[j]->getDestino()<<") ";
+		cout<<"Endossibionte "<<i<<" (" << endossibiontes[i].first.custo <<") : ";
+		for (int j=0; j<endossibiontes[i].first.caminho.size(); j++){
+			cout<<"("<<endossibiontes[i].first.caminho[j]->getOrigem()<< ","<<endossibiontes[i].first.caminho[j]->getDestino()<<") ";
 		}
 		cout<<endl;
 	}
@@ -516,7 +612,7 @@ void printEndossimbiontes(vector <Informacao> endossibiontes){
 
 void transgenic(Grafo *g){
 	Hospedeiro hospedeiro = initHospedeiro(g);
-	vector <Informacao> endossibiontes;
+	vector <pair <Informacao, int > > endossibiontes;
 	do{
 		endossibiontes = vizinhoMaisProximo(g,quantDNACiclo);//randomEndosibitontes(g);
 	}while(endossibiontes.size()==0);
@@ -534,45 +630,48 @@ void transgenic(Grafo *g){
 		//fim da geracao plasmideos
 		//cout<<"AQUI1"<<endl;
 		if (plasmideosSimples.size()>0){
-			vector < pair<Informacao, int > > subPop = slecionaCromossomos(endossibiontes);
+			//vector < pair<Informacao, int > > subPop = slecionaCromossomos(endossibiontes);
 			vector <Informacao> novaPop;
-			if (subPop.size()>0){
-				for (int po = 0; po<subPop.size(); po++){
-					int id_plasm = rand()%(plasmideosSimples.size());
-					Informacao resultado;
-					bool isValido = manipula(g, plasmideosSimples[id_plasm], subPop[po].first, resultado);
-					if (isValido==true){
-						endossibiontes[subPop[po].second] = resultado; // substitui no endossimbionte
-						novaPop.push_back(resultado);
-					} 
+			//if (subPop.size()>0){
+			for (int po = 0; po<endossibiontes.size(); po++){//subPop
+				int id_plasm = rand()%(plasmideosSimples.size());
+				Informacao resultado;
+				//cout<<"Size = "<<plasmideosSimples[id_plasm].cadeia.size()<<endl;
+				bool isValido = manipula(g, plasmideosSimples[id_plasm], endossibiontes[po].first, resultado);
+				if (isValido==true){
+					endossibiontes[po].first = resultado; // substitui no endossimbionte
+					novaPop.push_back(resultado);
+					endossibiontes[po].second = 0;
+					//cout<<"OBA OBA OBA"<<endl;
+				} else {
+					endossibiontes[po].second +=1;
+					if (endossibiontes[po].second==20){
+						trans2opt(g, endossibiontes[po].first);
+						//cout<<"Transpossons ... "<<endl;
+					}
 				}
-				//atualizadaMaterialGenetico(novaPop,hospedeiro.cicloHamiltoniano);
 			}
+			//atualizadaMaterialGenetico(novaPop,hospedeiro.cicloHamiltoniano);
+		//	}
 		}
-		 // cout<<"Iteracao "<<iii<<endl;
-		 // cout<<"Nova populcao de cromossomos : "<<endl;
-		 // printEndossimbiontes(endossibiontes);
-		 // cout<<"Material genético: "<<endl;
-		 // printEndossimbiontes(hospedeiro.cicloHamiltoniano);
 	}
 	cout<<"Resultado final"<<endl;
-	float min = endossibiontes[0].custo;
+	float min = endossibiontes[0].first.custo;
 	int i_min = 0;
-	bool endo = true;
 	for (int i=1; i<endossibiontes.size(); i++){
-		if (endossibiontes[i].custo<min){
-			min = endossibiontes[i].custo;
+		if (endossibiontes[i].first.custo<min){
+			min = endossibiontes[i].first.custo;
 			i_min = i;
 		}
 	}
 	cout<<"Melhor custo encontrado = "<<min<<endl;
-	if (endo){
-		cout<<"Size: "<<endossibiontes[i_min].caminho.size()<<endl;
-		cout<<"Solucao : " <<endl;
-		for (int j=0; j<endossibiontes[i_min].caminho.size(); j++){
-			cout<<"("<<endossibiontes[i_min].caminho[j]->getOrigem()<< ","<<endossibiontes[i_min].caminho[j]->getDestino()<<") ";
-		}
+
+	cout<<"Size: "<<endossibiontes[i_min].first.caminho.size()<<endl;
+	cout<<"Solucao : " <<endl;
+	for (int j=0; j<endossibiontes[i_min].first.caminho.size(); j++){
+		cout<<"("<<endossibiontes[i_min].first.caminho[j]->getOrigem()<< ","<<endossibiontes[i_min].first.caminho[j]->getDestino()<<") ";
 	}
+	
 	cout<<endl;
 	// cout<<"Todos os endossinbiontes : "<<endl;
 	// printEndossimbiontes(endossibiontes);
@@ -599,19 +698,16 @@ int main(){
 	int nA = id; // quantidade de arestas do grafo	
 	cout<<"Instância lida com sucesso"<<endl;
 	//Hospedeiro resul = initHospedeiro(&my_grafo);
-	quantPlasFromPath = 40;
-	quantPlasFromTree = 20;
+	quantPlasFromPath = 35;
+	quantPlasFromTree = 15;
 	//quantPlasFromCicle = 12;
-	quantPlasFromCadeiaSimplex =35;
-	iteracoes = 180;
+	quantPlasFromCadeiaSimplex =30;
+	iteracoes = 100;
 
 	times(&tempsInit);  // pega o tempo do clock inical
 	//Aresta ** arestasPtr= my_grafo.getAllArestasPtr();
 	// vector< Informacao > arvores = AllSpaningTree(&my_grafo, arestasPtr,quantDNAArvores);
 	//Hospedeiro hospedeiro = initHospedeiro(&my_grafo);
-	//printEndossimbiontes(arvores);
-	//printEndossimbiontes(hospedeiro.caminhos);
-	//printEndossimbiontes(hospedeiro.cicloHamiltoniano);
 	transgenic(&my_grafo);
 
 	// Informacao ret = simplexrelaxado(&my_grafo);
@@ -634,14 +730,21 @@ int main(){
 
 
 
-	// int index = 25;
-	// vector< Informacao > cicloHamiltoniano  = vizinhoMaisProximo(&my_grafo,quantDNACiclo);;
-	// cout<<"Size = "<<cicloHamiltoniano[index].caminho.size()<<endl;
-	// cout<<"Custo = "<<cicloHamiltoniano[index].custo<<endl;
-	// // for (int j=0; j<cicloHamiltoniano[1].caminho.size(); j++){
-	// // 	cout<<"("<<cicloHamiltoniano[1].caminho[j]->getOrigem()<< ","<<cicloHamiltoniano[1].caminho[j]->getDestino()<<") ";
-	// // }
+ // 	int index = 40; //30
+	// vector< pair<Informacao,int> > cicloHamiltoniano  = vizinhoMaisProximo(&my_grafo,quantDNACiclo);;
+	// cout<<"Size = "<<cicloHamiltoniano[index].first.caminho.size()<<endl;
+	// cout<<"Custo = "<<cicloHamiltoniano[index].first.custo<<endl;
+	// for (int j=0; j<cicloHamiltoniano[index].first.caminho.size(); j++){
+	// 	cout<<"("<<cicloHamiltoniano[index].first.caminho[j]->getOrigem()<< ","<<cicloHamiltoniano[index].first.caminho[j]->getDestino()<<") ";
+	// }
 	// cout<<endl;
+	// trans2opt(&my_grafo, cicloHamiltoniano[index].first);
+	// cout<<"Custo = "<<cicloHamiltoniano[index].first.custo<<endl;
+	// for (int j=0; j<cicloHamiltoniano[index].first.caminho.size(); j++){
+	// 	cout<<"("<<cicloHamiltoniano[index].first.caminho[j]->getOrigem()<< ","<<cicloHamiltoniano[index].first.caminho[j]->getDestino()<<") ";
+	// }
+	// cout<<endl;
+
 	// Informacao ret = transplex(&my_grafo, cicloHamiltoniano[index]);
 	// cout<<"Size = "<<ret.caminho.size()<<endl;
 	// cout<<"Custo "<<ret.custo<< " : ";

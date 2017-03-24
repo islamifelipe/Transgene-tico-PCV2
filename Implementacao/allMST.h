@@ -20,7 +20,7 @@
 #include "Informacao.h"
 using namespace std;
 
-#define MAX2 10
+#define MAX2 5
 
 void Partition(Grafo P, vector<Aresta *> &Pa, Heap &List, map<int, pair< Informacao, list<Grafo>::iterator > > &MSTs,list <Grafo > &vetorParticoes, Aresta ** arestasPtr);
 vector< Informacao > AllSpaningTree(Grafo *g, Aresta ** arestasPtr, int maximo);
