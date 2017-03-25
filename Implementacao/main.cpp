@@ -706,7 +706,7 @@ int main(){
 	quantPlasFromTree = 25; // este valor é alto, porém nao guardaremos todos os plasmideos, mas somente aqueles menores que um certo comprimento
 	//quantPlasFromCicle = 12;
 	quantPlasFromCadeiaSimplex =20;
-	iteracoes = 500;
+	iteracoes = 700;
 
 	times(&tempsInit);  // pega o tempo do clock inical
 	//Aresta ** arestasPtr= my_grafo.getAllArestasPtr();
