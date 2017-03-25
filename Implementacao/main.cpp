@@ -67,7 +67,7 @@ int quantPlasFromCadeiaSimplex; // Quantidade de plasmideos simples formados por
 int iteracoes; // quantidade de iteracoes do transgenético
 int quantDNAArvores = 5; // Quantidade de AGM armazenadas no hospedeiro
 int quantDNACaminhos = 295; // Quantidade de caminhos curtos simples armazenadas no hospedeiro
-int quantDNACiclo = 50; // Quantidade de ciclos hamiltonianos armazenadas no hospedeiro 
+int quantDNACiclo = 60; // Quantidade de ciclos hamiltonianos para o conjunto dos endossimbiontes
 int sizeTranspossonIntervalo = 50; //trans2opt = a busca na vizinhança deve ser feita entre os alelos init e end
 //sizeTranspossonIntervalo é o tamanho maximo do intervalo de busca do transposson. O trecho vai de (init, sizeTranspossonIntervalo), onde init é randômico
 int n;
@@ -538,7 +538,6 @@ void trans2opt(Grafo *g, Informacao &re_endossibionte){
 							representacao[i] = representacao[j];
 							representacao[j] = aux;
 							melhoramento = true;
-							cout<<"efeokfofk"<<endl;
 							break;
 						}
 					}
@@ -616,7 +615,7 @@ void transgenic(Grafo *g){
 	do{
 		endossibiontes = vizinhoMaisProximo(g,quantDNACiclo);//randomEndosibitontes(g);
 	}while(endossibiontes.size()==0);
-	cout<<"Endossibiontes computados ... ";
+	cout<<endossibiontes.size()<<" endossimbiontes computados ... ";
 	// printEndossimbiontes(hospedeiro.cicloHamiltoniano);
 	// printEndossimbiontes(endossibiontes);
 	cout<<"Começa o transgenético ..."<<endl;
@@ -702,7 +701,7 @@ int main(){
 	quantPlasFromTree = 15;
 	//quantPlasFromCicle = 12;
 	quantPlasFromCadeiaSimplex =30;
-	iteracoes = 100;
+	iteracoes = 90;
 
 	times(&tempsInit);  // pega o tempo do clock inical
 	//Aresta ** arestasPtr= my_grafo.getAllArestasPtr();
