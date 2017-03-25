@@ -29,6 +29,7 @@
 #include "Informacao.h"
 #include <queue>          // std::queue
 #include "transplex.h"
+#include <pthread.h> 
 using namespace std;
  
 /* 
@@ -72,7 +73,7 @@ int sizeTranspossonIntervalo = 40; //trans2opt = a busca na vizinhança deve ser
 //sizeTranspossonIntervalo é o tamanho maximo do intervalo de busca do transposson. O trecho vai de (init, sizeTranspossonIntervalo), onde init é randômico
 int n;
 struct tms tempsInit, initArvores, tempsFinal1,tempsFinal2 ; // para medir o tempo
-
+vector <pair <Informacao, int > > endossibiontes;
 /*Usada para preencher o a populacao inciial de 
 endossibiontes com solucoes puramente aleatorias
 Retorna n caminhos. Onde n é o numero de vertices do grafo;
@@ -218,7 +219,7 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 			amostral.push_back(chaine.caminho[jj]->getDestino());
 		}
 		int origem = amostral[rand()%amostral.size()];
-		int max_size = 3; // comprimento maximo do plasmideo
+		int max_size = 9; // comprimento maximo do plasmideo
 		visitado[origem] = 1;
 		while (max_size>0){
 			float min = INT_MAX;
@@ -245,6 +246,7 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 		}
 		if (sol.size()>0) {
 			plasmideosSimples.push_back((Pasmideo){sol});
+			//cout<<"size simplex "<<sol.size()<<endl;
 		}
 	}
 
@@ -615,9 +617,50 @@ void printEndossimbiontes(vector < pair <Informacao, int> > endossibiontes){
 // 	}
 // }
 
+void printResultado(){
+	cout<<"Resultado final"<<endl;
+	float min = endossibiontes[0].first.custo;
+	int i_min = 0;
+	for (int i=1; i<endossibiontes.size(); i++){
+		if (endossibiontes[i].first.custo<min){
+			min = endossibiontes[i].first.custo;
+			i_min = i;
+		}
+	}
+	cout<<"Melhor custo encontrado = "<<min<<endl;
+
+	cout<<"Size: "<<endossibiontes[i_min].first.caminho.size()<<endl;
+	cout<<"Solucao : " <<endl;
+	for (int j=0; j<endossibiontes[i_min].first.caminho.size(); j++){
+		cout<<"("<<endossibiontes[i_min].first.caminho[j]->getOrigem()<< ","<<endossibiontes[i_min].first.caminho[j]->getDestino()<<") ";
+	}
+	
+	cout<<endl;
+
+}
+void *tempo(void *nnnn){
+	while (true){
+		times(&tempsFinal1);   /* current time */ // clock final
+		clock_t user_time = (tempsFinal1.tms_utime - tempsInit.tms_utime);
+		float sec = (float) user_time / (float) sysconf(_SC_CLK_TCK);
+		
+		if (sec==3600){ 
+			cout<<"RESULTADO AO FIM DE 1H"<<endl;
+			printResultado();
+			sleep(3590); // é importante pra nao ficar verificando todo o tempo
+		} else if (sec==7200){
+			cout<<"RESULTADO AO FIM DE 2H"<<endl;
+			cout<<"TEMPO LIMITE ATINGIDO..."<<endl;
+			printResultado();
+		
+			exit(EXIT_FAILURE);
+		}
+	}
+}
+
+
 void transgenic(Grafo *g){
 	Hospedeiro hospedeiro = initHospedeiro(g);
-	vector <pair <Informacao, int > > endossibiontes;
 	do{
 		endossibiontes = vizinhoMaisProximo(g,quantDNACiclo);//randomEndosibitontes(g);
 	}while(endossibiontes.size()==0);
@@ -659,24 +702,7 @@ void transgenic(Grafo *g){
 		//	}
 		}
 	}
-	cout<<"Resultado final"<<endl;
-	float min = endossibiontes[0].first.custo;
-	int i_min = 0;
-	for (int i=1; i<endossibiontes.size(); i++){
-		if (endossibiontes[i].first.custo<min){
-			min = endossibiontes[i].first.custo;
-			i_min = i;
-		}
-	}
-	cout<<"Melhor custo encontrado = "<<min<<endl;
-
-	cout<<"Size: "<<endossibiontes[i_min].first.caminho.size()<<endl;
-	cout<<"Solucao : " <<endl;
-	for (int j=0; j<endossibiontes[i_min].first.caminho.size(); j++){
-		cout<<"("<<endossibiontes[i_min].first.caminho[j]->getOrigem()<< ","<<endossibiontes[i_min].first.caminho[j]->getDestino()<<") ";
-	}
-	
-	cout<<endl;
+	printResultado();
 	// cout<<"Todos os endossinbiontes : "<<endl;
 	// printEndossimbiontes(endossibiontes);
 }
@@ -703,12 +729,20 @@ int main(){
 	cout<<"Instância lida com sucesso"<<endl;
 	//Hospedeiro resul = initHospedeiro(&my_grafo);
 	quantPlasFromPath = 25;
-	quantPlasFromTree = 25; // este valor é alto, porém nao guardaremos todos os plasmideos, mas somente aqueles menores que um certo comprimento
-	//quantPlasFromCicle = 12;
+	quantPlasFromTree = 25; 
 	quantPlasFromCadeiaSimplex =20;
-	iteracoes = 700;
+	iteracoes = 750;
 
 	times(&tempsInit);  // pega o tempo do clock inical
+	// para medir o tempo em caso limite
+	pthread_t thread_time; 
+	pthread_attr_t attr;
+	int nnnnnnnn=0;
+	if(pthread_create(&thread_time, NULL, &tempo, (void*)nnnnnnnn)){ // on criee efectivement la thread de rechaufage
+        printf("Error to create the thread");
+        exit(EXIT_FAILURE);
+    }
+    //
 	//Aresta ** arestasPtr= my_grafo.getAllArestasPtr();
 	// vector< Informacao > arvores = AllSpaningTree(&my_grafo, arestasPtr,quantDNAArvores);
 	//Hospedeiro hospedeiro = initHospedeiro(&my_grafo);
