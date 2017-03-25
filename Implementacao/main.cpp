@@ -183,9 +183,9 @@ Hospedeiro initHospedeiro(Grafo *g){
 	times(&initArvores); 
 	vector< Informacao > arvores = AllSpaningTree(g, arestasPtr,quantDNAArvores);
 	
-	times(&tempsFinal2);   /* current time */ // clock final
-	clock_t user_time = (tempsFinal2.tms_utime - initArvores.tms_utime);
-	float sec = (float) user_time / (float) sysconf(_SC_CLK_TCK);
+	times(&tempsFinal2);   /* current time */ 
+	double user_time = (tempsFinal2.tms_utime - initArvores.tms_utime);
+	double sec = (double) user_time / (double) sysconf(_SC_CLK_TCK);
 	cout<<arvores.size()<<" arvores computadas no hospedeiro"<<endl;
 	cout<<"Tempo parcial em segundos: "<<sec<<endl;
 	//vector< Informacao > cicloHamiltoniano; //= vizinhoMaisProximo(g,quantDNACiclo);
@@ -662,7 +662,7 @@ void transgenic(Grafo *g){
 		times(&tempsFinal1);   /* current time */ // clock final
 		clock_t user_time = (tempsFinal1.tms_utime - tempsInit.tms_utime);
 		float sec = (float) user_time / (float) sysconf(_SC_CLK_TCK);
-		if (sec>=7200) break;
+		if (sec>=7200) break;//7200
 	}
 	cout<<"Resultado final"<<endl;
 	float min = endossibiontes[0].first.custo;
