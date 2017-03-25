@@ -33,8 +33,8 @@ main.o : main.cpp
 	g++ -g -c  main.cpp -o main.o -O3 -w -Wall 
 
 transplex.o : transplex.cpp
-	g++  -pthread -g -c transplex.cpp -o transplex.o -O3 -w -Wall 
+	g++ -g -c transplex.cpp -o transplex.o -O3 -w -Wall 
 		
 transgenetico : main.o  Grafo.o Vertice.o Aresta.o Conjunto.o kruskal.o margeSort.o Heap.o  allmst.o dijkstra.o transplex.o
-	g++  -pthread -g  Aresta.o  Vertice.o Grafo.o Conjunto.o kruskal.o Heap.o margeSort.o allmst.o dijkstra.o main.o transplex.o -lm -o transgenetico -Llib/ -lgurobi_c++ -lgurobi65 -lm -O3 -w -Wall -mms-bitfields 
+	g++ -g  Aresta.o  Vertice.o Grafo.o Conjunto.o kruskal.o Heap.o margeSort.o allmst.o dijkstra.o main.o transplex.o -lm -o transgenetico -Llib/ -lgurobi_c++ -lgurobi65 -lm -O3 -w -Wall -mms-bitfields 
 	
