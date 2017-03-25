@@ -67,8 +67,8 @@ int quantPlasFromCadeiaSimplex; // Quantidade de plasmideos simples formados por
 int iteracoes; // quantidade de iteracoes do transgenético
 int quantDNAArvores = 5; // Quantidade de AGM armazenadas no hospedeiro
 int quantDNACaminhos = 295; // Quantidade de caminhos curtos simples armazenadas no hospedeiro
-int quantDNACiclo = 60; // Quantidade de ciclos hamiltonianos para o conjunto dos endossimbiontes
-int sizeTranspossonIntervalo = 50; //trans2opt = a busca na vizinhança deve ser feita entre os alelos init e end
+int quantDNACiclo = 40; // Quantidade de ciclos hamiltonianos para o conjunto dos endossimbiontes
+int sizeTranspossonIntervalo = 40; //trans2opt = a busca na vizinhança deve ser feita entre os alelos init e end
 //sizeTranspossonIntervalo é o tamanho maximo do intervalo de busca do transposson. O trecho vai de (init, sizeTranspossonIntervalo), onde init é randômico
 int n;
 struct tms tempsInit, initArvores, tempsFinal1,tempsFinal2 ; // para medir o tempo
@@ -218,7 +218,7 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 			amostral.push_back(chaine.caminho[jj]->getDestino());
 		}
 		int origem = amostral[rand()%amostral.size()];
-		int max_size = 6; // comprimento maximo do plasmideo
+		int max_size = 3; // comprimento maximo do plasmideo
 		visitado[origem] = 1;
 		while (max_size>0){
 			float min = INT_MAX;
@@ -255,9 +255,7 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 	O plasmideo retornado deve ser um caminho 
 */
 void constroiPlasmideosFromTree(Grafo *g, vector <Pasmideo> &plasmideosSimples, vector< Informacao > trees){
-
 	for (int i=0; i<quantPlasFromTree; i++){
-
 		queue <int> fila_de_vertices;
 		int antecessor[g->getQuantVertices()];
 		int visitado[g->getQuantVertices()];
@@ -269,21 +267,26 @@ void constroiPlasmideosFromTree(Grafo *g, vector <Pasmideo> &plasmideosSimples, 
 		Informacao tree = trees[id];
 		int origem = rand()%g->getQuantVertices();
 		int destino = rand()%g->getQuantVertices();
-		// origem e destino devem ser diferentes
+		//origem e destino devem ser diferentes
 		if (origem==destino){
 			i--;
 			continue;
 		}
+		int conttttvertices = 0;
 		fila_de_vertices.push(origem);
-		while (fila_de_vertices.size()>0){
+		int autallvertice = origem;
+		while (fila_de_vertices.size()>0 && conttttvertices<7){
 			int orig =  fila_de_vertices.front();
 			fila_de_vertices.pop();
+			autallvertice = orig;
+			conttttvertices++;
 			if (orig!=destino){
 				for (int jj = 0; jj<tree.caminho.size(); jj++){
 					if (tree.caminho[jj]->getOrigem()==orig && visitado[tree.caminho[jj]->getDestino()]==0){
 						antecessor[tree.caminho[jj]->getDestino()] = orig;
 						fila_de_vertices.push(tree.caminho[jj]->getDestino());
 						visitado[tree.caminho[jj]->getDestino()] = 1;
+						
 					} else if (tree.caminho[jj]->getDestino()==orig && visitado[tree.caminho[jj]->getOrigem()]==0){
 						antecessor[tree.caminho[jj]->getOrigem()] = orig;
 						fila_de_vertices.push(tree.caminho[jj]->getOrigem());
@@ -292,15 +295,18 @@ void constroiPlasmideosFromTree(Grafo *g, vector <Pasmideo> &plasmideosSimples, 
 				}
 			} else break;
 		}
-		int dest = destino;
+		int dest = autallvertice;
 		vector<Aresta*> sol;
 		while (dest != origem){
 			sol.push_back(g->getArestas(g->isAdjacente(dest, antecessor[dest])));
 			dest = antecessor[dest];
 			//cout<<"aqui3"<<endl;
 		}
-		plasmideosSimples.push_back((Pasmideo){sol});
-		//cout<<"Size Arvore = "<<sol.size()<<endl;
+		if (sol.size()>0){
+			plasmideosSimples.push_back((Pasmideo){sol});
+			//cout<<"Size Arvore = "<<sol.size()<<endl;
+		}
+
 	}
 
 }
@@ -641,10 +647,9 @@ void transgenic(Grafo *g){
 					endossibiontes[po].first = resultado; // substitui no endossimbionte
 					novaPop.push_back(resultado);
 					endossibiontes[po].second = 0;
-					//cout<<"OBA OBA OBA"<<endl;
 				} else {
 					endossibiontes[po].second +=1;
-					if (endossibiontes[po].second==20){
+					if (endossibiontes[po].second==5){
 						trans2opt(g, endossibiontes[po].first);
 						//cout<<"Transpossons ... "<<endl;
 					}
@@ -697,11 +702,11 @@ int main(){
 	int nA = id; // quantidade de arestas do grafo	
 	cout<<"Instância lida com sucesso"<<endl;
 	//Hospedeiro resul = initHospedeiro(&my_grafo);
-	quantPlasFromPath = 35;
-	quantPlasFromTree = 15;
+	quantPlasFromPath = 25;
+	quantPlasFromTree = 25; // este valor é alto, porém nao guardaremos todos os plasmideos, mas somente aqueles menores que um certo comprimento
 	//quantPlasFromCicle = 12;
-	quantPlasFromCadeiaSimplex =30;
-	iteracoes = 90;
+	quantPlasFromCadeiaSimplex =20;
+	iteracoes = 500;
 
 	times(&tempsInit);  // pega o tempo do clock inical
 	//Aresta ** arestasPtr= my_grafo.getAllArestasPtr();
