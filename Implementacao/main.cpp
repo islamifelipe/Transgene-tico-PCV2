@@ -102,7 +102,7 @@ vector< pair <Informacao, int> > vizinhoMaisProximo(Grafo *g, int maximo){// O(n
 						ver_des = j;
 					}
 				}
-			}
+			} 
 			//escolhido o proximo vertice
 			if (ares_min == -1){ // fim
 				cont=g->getQuantVertices();
