@@ -195,16 +195,21 @@ Hospedeiro initHospedeiro(Grafo *g){
 		dijkstra(g,c,caminhos,quantDNACaminhos);
 	}
 	cout<<caminhos.size()<<" caminhos curtos no hospedeiro"<<endl;
-	Informacao ret;//= simplexrelaxado(g);
-	Hospedeiro resul = {arvores,caminhos, ret};
+	Informacao ret = simplexrelaxado(g);
+	vector< Informacao > reeeee;
+	reeeee.push_back(ret);
+	Hospedeiro resul = {arvores,caminhos, reeeee};
 	//cout<<"Uma cadeia de DNA gerada pelo simplex relaxado"<<endl;
 	return resul;
 }
 
 
 
-void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideosSimples, Informacao chaine){
+void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideosSimples, vector< Informacao > chaines){
 	for (int i=0; i<quantPlasFromCadeiaSimplex; i++){
+		Informacao chaine;
+		if (chaines.size()==0) return;
+		chaine = chaines[rand()%chaines.size()];
 		vector<Aresta*> sol;
 		queue <int> fila_de_vertices;
 		int visitado[g->getQuantVertices()];
@@ -618,6 +623,7 @@ void printEndossimbiontes(vector < pair <Informacao, int> > endossibiontes){
 
 void transgenic(Grafo *g){
 	Hospedeiro hospedeiro = initHospedeiro(g);
+	int contttSimplex = 1;
 	vector <pair <Informacao, int > > endossibiontes;
 	do{
 		endossibiontes = vizinhoMaisProximo(g,quantDNACiclo);//randomEndosibitontes(g);
@@ -632,7 +638,7 @@ void transgenic(Grafo *g){
 		constroiPlasmideosFromTree(g, plasmideosSimples, hospedeiro.arvores);
 		constroiPlasmideosFromPath(plasmideosSimples,hospedeiro.caminhos);
 		//constroiPlasmideosFromHamiltoniano(plasmideosSimples,hospedeiro.cicloHamiltoniano);
-		//constroiPlasmideosFromCadeiaSimplex(g, plasmideosSimples, hospedeiro.chaineSimplex);
+		constroiPlasmideosFromCadeiaSimplex(g, plasmideosSimples, hospedeiro.chaineSimplex);
 		//fim da geracao plasmideos
 		//cout<<"AQUI1"<<endl;
 		if (plasmideosSimples.size()>0){
@@ -653,6 +659,12 @@ void transgenic(Grafo *g){
 					if (endossibiontes[po].second==5){
 						trans2opt(g, endossibiontes[po].first);
 						//cout<<"Transpossons ... "<<endl;
+					} else if (endossibiontes[po].second==10){
+						 if (contttSimplex<10){
+							 Informacao ret = transplex(g, endossibiontes[po].first);
+							 if (ret.caminho.size()>0) hospedeiro.chaineSimplex.push_back(ret);
+						 }
+						 contttSimplex++;
 					}
 				}
 			}

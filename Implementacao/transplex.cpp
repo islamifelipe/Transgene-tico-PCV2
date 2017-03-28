@@ -2,7 +2,7 @@
 #include <iostream>
 #include <map> 
 #include <string>
-#define MAXITERACOES 6000
+#define MAXITERACOES 600
 
 GRBVar *u, **x;
 void init(Grafo *g){ // deve ser chamada apenas uma vez
@@ -19,11 +19,11 @@ void init(Grafo *g){ // deve ser chamada apenas uma vez
 Informacao transplex(Grafo *g, Informacao cicloHamiltoniano){
   GRBEnv env = GRBEnv();;
 
-  //env.set("OutputFlag","0");
-  env.set(GRB_DoubleParam_IterationLimit,MAXITERACOES-2000);
+  env.set("OutputFlag","0");
+  env.set(GRB_DoubleParam_IterationLimit,MAXITERACOES);
   //env.set(GRB_DoubleParam_MIPGap,0.40);
   env.set(GRB_DoubleParam_Heuristics, 0); // 0% do tempo aplicado a heuristica do root
- // env.set(GRB_IntParam_NodeMethod, 1);
+  env.set(GRB_IntParam_Presolve, 0);
   env.set(GRB_IntParam_Method, 0); 
   env.set(GRB_IntParam_SiftMethod,0);
   GRBModel model = GRBModel(env);;
@@ -207,6 +207,7 @@ Informacao simplexrelaxado(Grafo *g){
  env.set(GRB_DoubleParam_IterationLimit,MAXITERACOES);
  env.set(GRB_DoubleParam_Heuristics, 0); // 0% do tempo aplicado a heuristica do root
   //env.set(GRB_IntParam_NodeMethod, 0);
+ env.set(GRB_IntParam_Presolve, 0);
   env.set(GRB_IntParam_Method, 1); // 1 é mais rapido //primal
   env.set(GRB_IntParam_SiftMethod,1);
 	GRBModel model = GRBModel(env);;
