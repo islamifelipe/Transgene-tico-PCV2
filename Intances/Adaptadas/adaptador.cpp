@@ -9,38 +9,29 @@ int main(){
 	string inp;
 	string doispontos;
 	int n;
-	int node;
+	float peso;
 	float dx, dy;
-	int *dxs;
-	int *dys;
+	int linha =0, coluna=0;
 	while (cin>>inp){
-		if (inp=="DIMENSION"){
-			cin>>doispontos;
+		//cout<<inp<<endl;
+		if (inp=="DIMENSION:"){
+			//cin>>doispontos;
 			cin>>n;
-			dxs = new int[n];
-			dys = new int[n];
+			cout<<n<<endl;
 		}
-		if (inp=="NODE_COORD_SECTION"){
-			while (cin>>node){
-				cin>>dx;
-				cin>>dy;
-				dxs[node-1] = dx;
-				dys[node-1] = dy;
+		if (inp=="EDGE_WEIGHT_SECTION"){
+			while (cin>>peso){
+				if (linha!=coluna){
+					cout<<linha<<" "<<coluna<<" "<<peso<<endl;
+				}
+				if (coluna<n-1) coluna++;
+				else {
+					coluna = 0;
+					linha++;
+				}
 			}
 		}
 	}
-
-	cout<<n<<endl;
-	for (int i=0; i<n; i++){
-		for (int j = i+1; j<n; j++){
-			float distance = sqrt((dxs[i]-dxs[j])*(dxs[i]-dxs[j]) + (dys[i]-dys[j])*(dys[i]-dys[j]));
-			cout<<i<<" "<<j<<" "<<round(distance)<<endl;
-			//cout<<i<<" "<<j<<" "<<distance<<endl;
-		}
-	}
-
-	delete[] dxs;
-	delete[] dys;
 
 	return 0;
 }
