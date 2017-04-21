@@ -8,7 +8,7 @@ void dijkstra(Grafo *g, int origem, vector< Informacao > &result,int maximo){ //
 	float dt[g->getQuantVertices()];// pode ser uma heap
 	int A[g->getQuantVertices()]; // ainda nao visitados
 	for (int i=0; i<g->getQuantVertices(); i++){
-		dt[i] = INT_MAX; // pode ser uma heap
+		dt[i] = 100000000000; // pode ser uma heap
 		rot[i] = 0;
 		A[i] = 1;
 	}
@@ -17,15 +17,15 @@ void dijkstra(Grafo *g, int origem, vector< Informacao > &result,int maximo){ //
 	int cont = 0; // conta quanto vertices ja foram visitados
 
 	while (cont != g->getQuantVertices()){
-		int r = INT_MAX;
-		float min_r = INT_MAX;
+		int r = 100000000000;
+		float min_r = 100000000000;
 		for (int i=0; i<g->getQuantVertices(); i++){
 			if (A[i]==1 && dt[i]<min_r){
 				r = i;
 				min_r = dt[i];
 			}
 		}
-		if (min_r!=INT_MAX){
+		if (min_r!=100000000000){
 			cont++;
 			A[r] = 0;
 			for (int i=0; i<g->getQuantVertices(); i++){

@@ -1,7 +1,0 @@
-Perguntas a GOLDBARG
-
-O tempo é medido somente com base nas iteracoes do transgenético, ou inclui também o tempo de calcular as informacoes "a priori" do hospedeiro?
-
-Devo testar o algotimo com os mesmos parâmetros para todas as instâncias? Por exemplo, 1000 iteracoes pra n=100 e 1000 pra n=700
-
-Eu devo comparar o resultado do meu algoritmo com algum resultado ja descrito na literatura?

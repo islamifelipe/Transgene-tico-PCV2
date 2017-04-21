@@ -6,7 +6,6 @@
 #=======================================================================
 */
 
-//TODO : ver como vai funcionar pra instâncias grandes (LIMITA o tamanho do hospedeiro)
 #include <iostream>
 #include <map> 
 #include <list>
@@ -69,7 +68,7 @@ int iteracoes; // quantidade de iteracoes do transgenético
 int quantDNAArvores = 5; // Quantidade de AGM armazenadas no hospedeiro
 int quantDNACaminhos = 295; // Quantidade de caminhos curtos simples armazenadas no hospedeiro
 int quantDNACiclo = 40; // Quantidade de ciclos hamiltonianos para o conjunto dos endossimbiontes
-int sizeTranspossonIntervalo = 40; //trans2opt = a busca na vizinhança deve ser feita entre os alelos init e end
+int sizeTranspossonIntervalo = 10;//40; //trans2opt = a busca na vizinhança deve ser feita entre os alelos init e end
 //sizeTranspossonIntervalo é o tamanho maximo do intervalo de busca do transposson. O trecho vai de (init, sizeTranspossonIntervalo), onde init é randômico
 int n;
 struct tms tempsInit, initArvores, tempsFinal1,tempsFinal2 ; // para medir o tempo
@@ -197,16 +196,16 @@ Hospedeiro initHospedeiro(Grafo *g){
 		dijkstra(g,c,caminhos,quantDNACaminhos);
 	}
 	cout<<caminhos.size()<<" caminhos curtos no hospedeiro"<<endl;
-	//Informacao ret = simplexrelaxado(g);
+	Informacao ret = simplexrelaxado(g);
 	vector< Informacao > reeeee;
-	//reeeee.push_back(ret);
+	reeeee.push_back(ret);
 	Hospedeiro resul = {arvores,caminhos, reeeee};
-	//cout<<"Uma cadeia de DNA gerada pelo simplex relaxado"<<endl;
+	cout<<"Uma cadeia de DNA gerada pelo simplex relaxado"<<endl;
 	return resul;
 }
 
 
-//TODO : ver assimétrica
+//assimétrica OK
 void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideosSimples, vector< Informacao > chaines){
 	for (int i=0; i<quantPlasFromCadeiaSimplex; i++){
 		Informacao chaine;
@@ -222,7 +221,7 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 			// antecessor[chaine.caminho[jj]->getOrigem()] = -1;
 			// antecessor[chaine.caminho[jj]->getDestino()] = -1;
 			amostral.push_back(chaine.caminho[jj]->getOrigem());
-			amostral.push_back(chaine.caminho[jj]->getDestino());
+			//amostral.push_back(chaine.caminho[jj]->getDestino());
 		}
 		int origem = amostral[rand()%amostral.size()];
 		int max_size = 9; // comprimento maximo do plasmideo
@@ -232,12 +231,13 @@ void constroiPlasmideosFromCadeiaSimplex(Grafo *g, vector <Pasmideo> &plasmideos
 			int idA;
 			int prox;
 			for (int jj = 0; jj<chaine.caminho.size(); jj++){
-				if ((chaine.caminho[jj]->getDestino()==origem && visitado[chaine.caminho[jj]->getOrigem()]==0)||(chaine.caminho[jj]->getOrigem()==origem && visitado[chaine.caminho[jj]->getDestino()]==0)){
+				if ((chaine.caminho[jj]->getOrigem()==origem && visitado[chaine.caminho[jj]->getOrigem()]==0)||(chaine.caminho[jj]->getOrigem()==origem && visitado[chaine.caminho[jj]->getDestino()]==0)){
 					if (chaine.caminho[jj]->getPeso()<min){
 						min = chaine.caminho[jj]->getPeso();
 						idA = chaine.caminho[jj]->getId();
-						if (chaine.caminho[jj]->getDestino()==origem) prox = chaine.caminho[jj]->getOrigem();
-						else if (chaine.caminho[jj]->getOrigem()==origem) prox = chaine.caminho[jj]->getDestino();
+						prox = chaine.caminho[jj]->getDestino();
+						//if (chaine.caminho[jj]->getDestino()==origem) prox = chaine.caminho[jj]->getOrigem();
+						//else if (chaine.caminho[jj]->getOrigem()==origem) prox = chaine.caminho[jj]->getDestino();
 					}
 				}
 			}
@@ -524,23 +524,24 @@ bool manipula(Grafo *g, Pasmideo plasm, Informacao cromossomo, Informacao &resul
 void trans2opt(Grafo *g, Informacao &re_endossibionte){
 	vector<int> representacao;
 	int initIntervalorTransposson = rand()%(re_endossibionte.caminho.size()-sizeTranspossonIntervalo+1); // 0 1 2 3 4 5 6 7 8 9 10 11 
-	// cout<<initIntervalorTransposson<<endl;
-	// cout<<sizeTranspossonIntervalo+initIntervalorTransposson<<endl;
+	 // cout<<initIntervalorTransposson<<endl;
+	 // cout<<sizeTranspossonIntervalo+initIntervalorTransposson<<endl;
 	//sizeTranspossonIntervalo = 50; // retirar;
 	
 	int init = re_endossibionte.caminho[0]->getOrigem();
-	if (init == re_endossibionte.caminho[1]->getOrigem() || init == re_endossibionte.caminho[1]->getDestino()){
-		init = re_endossibionte.caminho[0]->getDestino();
-	}
+	// if (init == re_endossibionte.caminho[1]->getOrigem() || init == re_endossibionte.caminho[1]->getDestino()){
+	// 	init = re_endossibionte.caminho[0]->getDestino();
+	// } // nao precisa disso, pois a instância é assimétrica
 	representacao.push_back(init);
 	int previuos =  init;
 	//cout<<init<<" ";
 	for (int i=0; i<re_endossibionte.caminho.size(); i++){ //O(n)
-		if (re_endossibionte.caminho[i]->getOrigem()!=previuos){
-				//cout<<re_endossibionte.caminho[i]->getOrigem()<<" ";
-			representacao.push_back(re_endossibionte.caminho[i]->getOrigem());
-			previuos = re_endossibionte.caminho[i]->getOrigem();
-		} else if (re_endossibionte.caminho[i]->getDestino()!=previuos){
+		// if (re_endossibionte.caminho[i]->getOrigem()!=previuos){
+		// 		//cout<<re_endossibionte.caminho[i]->getOrigem()<<" ";
+		// 	representacao.push_back(re_endossibionte.caminho[i]->getOrigem());
+		// 	previuos = re_endossibionte.caminho[i]->getOrigem();
+		// } 
+		if (re_endossibionte.caminho[i]->getDestino()!=previuos){
 			//cout<<re_endossibionte.caminho[i]->getDestino()<<" ";
 			representacao.push_back(re_endossibionte.caminho[i]->getDestino());
 			previuos = re_endossibionte.caminho[i]->getDestino();
@@ -639,13 +640,14 @@ void printEndossimbiontes(vector < pair <Informacao, int> > endossibiontes){
 
 void transgenic(Grafo *g){
 	Hospedeiro hospedeiro = initHospedeiro(g);
+	int contttSimplex = 1;
 	vector <pair <Informacao, int > > endossibiontes;
 	do{
 		endossibiontes = vizinhoMaisProximo(g,quantDNACiclo);//randomEndosibitontes(g);
 	}while(endossibiontes.size()==0);
 	cout<<endossibiontes.size()<<" endossimbiontes computados ... ";
 	// printEndossimbiontes(hospedeiro.cicloHamiltoniano);
-	 printEndossimbiontes(endossibiontes);
+	 //printEndossimbiontes(endossibiontes);
 	cout<<"Começa o transgenético ..."<<endl;
 	for (int iii = 0; iii<iteracoes; iii++){
 		// gera plasmideos
@@ -653,7 +655,7 @@ void transgenic(Grafo *g){
 		constroiPlasmideosFromTree(g, plasmideosSimples, hospedeiro.arvores);
 		constroiPlasmideosFromPath(plasmideosSimples,hospedeiro.caminhos);
 		//constroiPlasmideosFromHamiltoniano(plasmideosSimples,hospedeiro.cicloHamiltoniano);
-		//constroiPlasmideosFromCadeiaSimplex(g, plasmideosSimples, hospedeiro.chaineSimplex);
+		constroiPlasmideosFromCadeiaSimplex(g, plasmideosSimples, hospedeiro.chaineSimplex);
 		//fim da geracao plasmideos
 		//cout<<"AQUI1"<<endl;
 		if (plasmideosSimples.size()>0){
@@ -669,13 +671,19 @@ void transgenic(Grafo *g){
 					endossibiontes[po].first = resultado; // substitui no endossimbionte
 					novaPop.push_back(resultado);
 					endossibiontes[po].second = 0;
-					cout<<"okdfokdofk"<<endl;
+					//cout<<"okdfokdofk"<<endl;
 				} else {
 					endossibiontes[po].second +=1;
                     if (endossibiontes[po].second==5){
-                            //trans2opt(g, endossibiontes[po].first);
-                            cout<<"Transpossons ... "<<endl;
-                    }
+                        trans2opt(g, endossibiontes[po].first);
+                    } else if (endossibiontes[po].second==10){
+						 if (contttSimplex<10){
+							 Informacao ret = transplex(g, endossibiontes[po].first);
+							 if (ret.caminho.size()>0) hospedeiro.chaineSimplex.push_back(ret);
+						 	//cout<<"transplextransplextransplextransp"<<endl;
+						 }
+						 contttSimplex++;
+					}
 				}
 			}
 			//atualizadaMaterialGenetico(novaPop,hospedeiro.cicloHamiltoniano);
@@ -733,7 +741,7 @@ int main(){
 	quantPlasFromTree = 25; 
 	//quantPlasFromCicle = 12;
 	quantPlasFromCadeiaSimplex =20;
-	iteracoes = 750;
+	iteracoes = 750;// 750;
 
 	times(&tempsInit);  // pega o tempo do clock inical
 	// Aresta ** arestasPtr= my_grafo.getAllArestasPtr();
@@ -741,18 +749,30 @@ int main(){
 	
 	// Hospedeiro hospedeiro = initHospedeiro(&my_grafo);
 	
-	// for (int i=0; i<hospedeiro.caminhos.size(); i++){
-	// 	cout<<"caminho "<<i<<": ";
-	// 	for (int j=0; j<hospedeiro.caminhos[i].caminho.size(); j++){
-	// 		cout<<"("<<hospedeiro.caminhos[i].caminho[j]->getOrigem()<< ","<<hospedeiro.caminhos[i].caminho[j]->getDestino()<<") ";
+	// for (int i=0; i<hospedeiro.chaineSimplex.size(); i++){
+	// 	cout<<"Cadeia de DNA do simplex "<<i<<": ";
+	// 	for (int j=0; j<hospedeiro.chaineSimplex[i].caminho.size(); j++){
+	// 		cout<<"("<<hospedeiro.chaineSimplex[i].caminho[j]->getOrigem()<< ","<<hospedeiro.chaineSimplex[i].caminho[j]->getDestino()<<") ";
 	// 	}
 	// 	cout<<endl;
 	// }
 
-	// vector <pair <Informacao, int > > endossibiontes = vizinhoMaisProximo(&my_grafo,quantDNACiclo);//randomEndosibitontes(g);
-	// printEndossimbiontes(endossibiontes);
-
-
+	//vector <pair <Informacao, int > > endossibiontes = vizinhoMaisProximo(&my_grafo,quantDNACiclo);//randomEndosibitontes(g);
+	//printEndossimbiontes(endossibiontes);
+	// int i_min = 1;
+	// cout<<"Custo: "<<endossibiontes[i_min].first.custo<<endl;
+	// cout<<"Solucao : " <<endl;
+	// for (int j=0; j<endossibiontes[i_min].first.caminho.size(); j++){
+	// 	cout<<"("<<endossibiontes[i_min].first.caminho[j]->getOrigem()<< ","<<endossibiontes[i_min].first.caminho[j]->getDestino()<<") ";
+	// }
+	// trans2opt(&my_grafo, endossibiontes[i_min].first);
+	// cout<<endl;
+	// cout<<"Custo: "<<endossibiontes[i_min].first.custo<<endl;
+	// cout<<"Solucao : " <<endl;
+	// for (int j=0; j<endossibiontes[i_min].first.caminho.size(); j++){
+	// 	cout<<"("<<endossibiontes[i_min].first.caminho[j]->getOrigem()<< ","<<endossibiontes[i_min].first.caminho[j]->getDestino()<<") ";
+	// }
+	//printEndossimbiontes(endossibiontes);
 	// vector <Pasmideo> plasmideosSimples;
 	// constroiPlasmideosFromPath(plasmideosSimples,hospedeiro.caminhos);
 	// for (int i=0; i<plasmideosSimples.size(); i++){
@@ -769,6 +789,7 @@ int main(){
 	// 		cout<<"("<<resultado.caminho[j]->getOrigem()<< ","<<resultado.caminho[j]->getDestino()<<") ";
 	// 	}
 	// }else cout<<"FALSEEE"<<endl;		
+	
 	transgenic(&my_grafo);
 
 	// Informacao ret = simplexrelaxado(&my_grafo);
@@ -778,8 +799,10 @@ int main(){
 	// 		cout<<"("<<ret.caminho[j]->getOrigem()<< ","<<ret.caminho[j]->getDestino()<<") ";
 	// 	}
 	// 	cout<<endl;
+
+	
 	// vector <Pasmideo> plasmideosSimples;
-	// constroiPlasmideosFromCadeiaSimplex(&my_grafo, plasmideosSimples, ret);
+	// constroiPlasmideosFromCadeiaSimplex(&my_grafo, plasmideosSimples, hospedeiro.chaineSimplex);
 	// for (int i=0; i<plasmideosSimples.size(); i++){
 	// 	cout<<"Pasmideo "<<i<< " : ";
 	// 	for (int j=0; j<plasmideosSimples[i].cadeia.size(); j++){
