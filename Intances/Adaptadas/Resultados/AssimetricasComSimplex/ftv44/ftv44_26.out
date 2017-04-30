@@ -1,0 +1,13 @@
+Instância lida com sucesso
+Iniciando hospedeiro ... 
+1 arvores computadas no hospedeiro
+Tempo parcial em segundos: 0
+295 caminhos curtos no hospedeiro
+Uma cadeia de DNA gerada pelo simplex relaxado
+40 endossimbiontes computados ... Começa o transgenético ...
+Resultado final
+Melhor custo encontrado = 1705
+Size: 45
+Solucao : 
+(31,30) (30,29) (29,24) (24,42) (42,23) (23,22) (22,18) (18,16) (16,17) (17,14) (14,43) (43,11) (11,10) (10,12) (12,13) (13,15) (15,1) (1,2) (2,5) (5,0) (0,21) (21,19) (19,20) (20,7) (7,9) (9,8) (8,40) (40,39) (39,38) (38,44) (44,3) (3,4) (4,6) (6,41) (41,35) (35,32) (32,28) (28,25) (25,26) (26,27) (27,33) (33,34) (34,36) (36,37) (37,31) 
+Tempo total em segundos : 0.85

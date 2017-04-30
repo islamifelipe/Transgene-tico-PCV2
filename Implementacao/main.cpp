@@ -5,7 +5,7 @@
 # This code implements Transgenic algorithm for the traveling salesman problem 
 #=======================================================================
 */
-//TODO : ver como vai funcionar pra instâncias grandes (LIMITA o tamanho do hospedeiro)
+
 #include <iostream>
 #include <map> 
 #include <list>
@@ -74,7 +74,7 @@ int n;
 struct tms tempsInit, initArvores, tempsFinal1,tempsFinal2 ; // para medir o tempo
 
 /*Usada para preencher o a populacao inciial de 
-endossibiontes com solucoes puramente aleatorias
+endossibiontes 
 Retorna n caminhos. Onde n é o numero de vertices do grafo;
 Cada caminho começa num vertice i 
 O segundo item pair (int) é pra contar a quantidade de vezes que o endossimbionte foi atacado sem sucesso*/
@@ -555,7 +555,7 @@ void trans2opt(Grafo *g, Informacao &re_endossibionte){
 					}
 				 }else{
 				 	/* troca (i-1,i) por (i-1, j) 
-					 * troca (i, i+1) por (j, i+1) 
+					 * troca (i, i+1) por (j, i+1)  *** 
 					 * troca (j-1,j) por (j-1, i) 
 					 * troca (j,j+1) por (i, j+1) 
 					 * portanto, as novas arestas devem existir
